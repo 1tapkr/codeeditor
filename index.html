@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Advanced Lite Code Editor</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background-color: #1e1e1e;
+            color: #fff;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            overflow: hidden;
+        }
+        /* Top Navigation Bar */
+        header {
+            background-color: #2d2d2d;
+            padding: 8px 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid #3c3c3c;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        .logo {
+            font-size: 1.1rem;
+            font-weight: bold;
+            color: #00adb5;
+        }
+        .action-btns {
+            display: flex;
+            gap: 8px;
+        }
+        button {
+            border: none;
+            padding: 6px 14px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: opacity 0.2s;
+        }
+        button:hover {
+            opacity: 0.9;
+        }
+        .btn-run { background-color: #00adb5; color: white; }
+        .btn-download { background-color: #28a745; color: white; }
+        .btn-github { background-color: #24292e; color: white; border: 1px solid #444; }
+
+        /* Main Workspace Container */
+        .container {
+            display: flex;
+            flex: 1;
+            height: calc(100vh - 55px);
+        }
+        
+        /* Left Section: Tabs + Editors */
+        .editor-section {
+            width: 50%;
+            display: flex;
+            flex-direction: column;
+            background-color: #252526;
+            border-right: 2px solid #3c3c3c;
+        }
+        
+        /* Tabs Row */
+        .tabs-bar {
+            display: flex;
+            background-color: #2d2d2d;
+            border-bottom: 1px solid #3c3c3c;
+        }
+        .tab-btn {
+            background: none;
+            color: #aaa;
+            padding: 10px 20px;
+            border-radius: 0;
+            border-right: 1px solid #3c3c3c;
+            font-weight: normal;
+        }
+        .tab-btn.active {
+            background-color: #1e1e1e;
+            color: #fff;
+            border-bottom: 2px solid #00adb5;
+            font-weight: bold;
+        }
+
+        /* Editors Content Area */
+        .editor-content {
+            flex: 1;
+            position: relative;
+        }
+        .editor-box {
+            display: none;
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+        }
+        .editor-box.active {
+            display: flex;
+        }
+        textarea {
+            width: 100%;
+            height: 100%;
+            background-color: #1e1e1e;
+            color: #d4d4d4;
+            border: none;
+            padding: 15px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 1rem;
+            resize: none;
+            outline: none;
+        }
+
+        /* Right Section: Live Preview */
+        .preview-section {
+            width: 50%;
+            background-color: #ffffff;
+        }
+        iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+            background-color: #fff;
+        }
+
+        /* Mobile Responsive View (For small networks/screens) */
+        @media (max-width: 768px) {
+            .container { flex-direction: column; }
+            .editor-section, .preview-section { width: 100%; height: 50%; }
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="logo">⚡ CodeDev</div>
+        <div class="action-btns">
+            <button class="btn-run" onclick="runCode()">▶ Run</button>
+            <button class="btn-download" onclick="downloadCode()">📥 Download</button>
+            <button class="btn-github" onclick="openGitHub()">🌐 GitHub</button>
+        </div>
+    </header>
+
+    <div class="container">
+        <!-- Editor Section with Tabs -->
+        <div class="editor-section">
+            <div class="tabs-bar">
+                <button class="tab-btn active" onclick="switchTab(event, 'html-panel')">HTML</button>
+                <button class="tab-btn" onclick="switchTab(event, 'css-panel')">CSS</button>
+                <button class="tab-btn" onclick="switchTab(event, 'js-panel') font-color:yellow;">JavaScript</button>
+            </div>
+            
+            <div class="editor-content">
+                <!-- HTML Editor Box -->
+                <div id="html-panel" class="editor-box active">
+                    <textarea id="html-code" placeholder="HTML code yahan likhein..."><!-- Example -->
+<h1>Hello Buddy!</h1>
+<p>Tabs check karne ke liye upar CSS aur JS par click karein.</p>
+<button id="alertBtn">Click Karein</button></textarea>
+                </div>
+                
+                <!-- CSS Editor Box -->
+                <div id="css-panel" class="editor-box">
+                    <textarea id="css-code" placeholder="CSS code yahan likhein...">body { 
+    text-align: center; 
+    font-family: sans-serif; 
+    background: #f4f4f4;
+    padding-top: 50px; 
+}
+h1 { color: #ff5722; }
+button { 
+    background: #00adb5; 
+    color: white; 
+    padding: 10px 20px; 
+    border: none; 
+    border-radius: 4px; 
+    cursor: pointer; 
+}</textarea>
+                </div>
+                
+                <!-- JS Editor Box -->
+                <div id="js-panel" class="editor-box">
+                    <textarea id="js-code" placeholder="JavaScript code yahan likhein...">document.getElementById('alertBtn').addEventListener('click', () => {
+    alert('Badhai ho! JavaScript bhi kaam kar raha hai.');
+});</textarea>
+                </div>
+            </div>
+        </div>
+
+        <!-- Preview Section -->
+        <div class="preview-section">
+            <iframe id="output"></iframe>
+        </div>
+    </div>
+
+    <script>
+        // Tab switching logic
+        function switchTab(event, panelId) {
+            const boxes = document.getElementsByClassName("editor-box");
+            for (let i = 0; i < boxes.length; i++) {
+                boxes[i].classList.remove("active");
+            }
+            
+            const tabs = document.getElementsByClassName("tab-btn");
+            for (let i = 0; i < tabs.length; i++) {
+                tabs[i].classList.remove("active");
+            }
+            
+            document.getElementById(panelId).classList.add("active");
+            event.currentTarget.classList.add("active");
+        }
+
+        // Live Code Compilation logic
+        function runCode() {
+            const htmlCode = document.getElementById("html-code").value;
+            const cssCode = document.getElementById("css-code").value;
+            const jsCode = document.getElementById("js-code").value;
+            const output = document.getElementById("output");
+
+            const iframeDoc = output.contentDocument || output.contentWindow.document;
+            
+            iframeDoc.open();
+            iframeDoc.write(htmlCode + "<style>" + cssCode + "</style>" + "<script>" + jsCode + "<\/script>");
+            iframeDoc.close();
+        }
+
+        // Download project as single HTML file
+        function downloadCode() {
+            const htmlCode = document.getElementById("html-code").value;
+            const cssCode = document.getElementById("css-code").value;
+            const jsCode = document.getElementById("js-code").value;
+
+            // Teeno code ko jodkar ek file banana
+            const fullProjectCode = `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Downloaded Project</title>
+    <style>${cssCode}</style>
+</head>
+<body>
+    ${htmlCode}
+    <script>${jsCode}<\/script>
+</body>
+</html>`;
+
+            const blob = new Blob([fullProjectCode], { type: "text/html" });
+            const a = document.createElement("a");
+            a.href = URL.createObjectURL(blob);
+            a.download = "my_project.html"; // File ka default naam
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+        }
+
+        // Redirect to GitHub
+        function openGitHub() {
+            window.open("https://github.com", "_blank");
+        }
+
+        // Pehli baar load hone par run karein
+        window.onload = runCode;
+    </script>
+
+</body>
+</html>
+
