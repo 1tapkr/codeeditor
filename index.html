@@ -3,98 +3,57 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>QuickCode Editor</title>
+<title>QuickCode + Turbo AI</title>
 <style>
   :root {
-    --bg: #1e1e1e;
-    --panel: #252526;
-    --panel-2: #2d2d2d;
-    --text: #d4d4d4;
-    --accent: #4fc3f7;
-    --border: #3c3c3c;
-    --btn: #3a3a3a;
-    --btn-hover: #4a4a4a;
+    --bg: #1e1e1e; --panel: #252526; --panel-2: #2d2d2d; --text: #d4d4d4;
+    --accent: #4fc3f7; --border: #3c3c3c; --btn: #3a3a3a; --btn-hover: #4a4a4a;
+    --turbo-on: #00ff88; --turbo-off: #ff4444;
   }
     * { box-sizing: border-box; margin: 0; padding: 0; }
-  body {
-    background: var(--bg);
-    color: var(--text);
-    font-family: 'Segoe UI', Roboto, Arial, sans-serif;
-    height: 100vh;
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
+  body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', Roboto, Arial, sans-serif; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+  
+  header { background: var(--panel); padding: 10px 16px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--border); flex-wrap: wrap; gap: 8px; }
+  .logo { font-size: 18px; font-weight: 600; color: var(--accent); }
+  .actions { display: flex; gap: 8px; flex-wrap: wrap; }
+  .actions button { background: var(--btn); color: var(--text); border: 1px solid var(--border); padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 14px; transition: background 0.2s ease; }
+  .actions button:hover { background: var(--btn-hover); }
+  #turboBtn { font-weight:bold; }
+  #turboBtn.on { background: var(--turbo-on); color:#000; }
+  #turboBtn.off { background: var(--turbo-off); color:#fff; }
+  #aiToggleBtn { background: var(--accent); color:#000; font-weight:bold; }
+
+  main { flex: 1; position: relative; }
+  textarea { width: 100%; height: 100%; background: var(--bg); color: var(--text); border: none; outline: none; resize: none; padding: 14px; font-family: 'Consolas', 'Monaco', monospace; font-size: 14px; line-height: 1.6; }
+
+  /* AI Panel - Floating */
+  .ai-panel { 
+    position: absolute; bottom: 0; right: 0; 
+    width: 40%; height: 100%; 
+    background: var(--panel); border-left: 1px solid var(--border);
+    display: flex; flex-direction: column;
+    transform: translateX(100%); transition: transform 0.3s ease;
+    z-index: 10;
   }
-  header {
-    background: var(--panel);
-    padding: 10px 16px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    border-bottom: 1px solid var(--border);
-    flex-wrap: wrap;
-    gap: 8px;
-  }
- .logo {
-    font-size: 18px;
-    font-weight: 600;
-    color: var(--accent);
-  }
- .file-name {
-    background: var(--panel-2);
-    border: 1px solid var(--border);
-    color: var(--text);
-    padding: 6px 10px;
-    border-radius: 4px;
-    font-size: 14px;
-    width: 160px;
-  }
- .actions {
-    display: flex;
-    gap: 8px;
-    flex-wrap: wrap;
-  }
- .actions button {
-    background: var(--btn);
-    color: var(--text);
-    border: 1px solid var(--border);
-    padding: 6px 12px;
-    border-radius: 4px;
-    cursor: pointer;
-    font-size: 14px;
-    transition: background 0.2s ease;
-  }
- .actions button:hover {
-    background: var(--btn-hover);
-  }
-  main {
-    flex: 1;
-    display: flex;
-    overflow: hidden;
-  }
-  textarea {
-    width: 100%;
-    height: 100%;
-    background: var(--bg);
-    color: var(--text);
-    border: none;
-    outline: none;
-    resize: none;
-    padding: 14px;
-    font-family: 'Consolas', 'Monaco', monospace;
-    font-size: 14px;
-    line-height: 1.6;
-  }
-  @media (max-width: 768px) {
-    header { justify-content: center; }
-   .file-name { width: 100%; }
-  }
+  .ai-panel.open { transform: translateX(0); }
+  .panel-header { padding: 8px 12px; background: var(--panel-2); border-bottom: 1px solid var(--border); font-weight: 600; display:flex; justify-content:space-between; }
+  .panel-header button { background:none; border:none; color:var(--text); font-size:18px; cursor:pointer; }
+  .ai-chat { flex:1; padding:10px; overflow-y:auto; }
+  .ai-input { display:flex; padding:10px; border-top:1px solid var(--border); gap:8px; }
+  .ai-input input { flex:1; padding:8px; background:var(--panel-2); border:1px solid var(--border); color:var(--text); border-radius:4px; }
+  .ai-input button { padding:8px 12px; background:var(--accent); border:none; color:#000; border-radius:4px; cursor:pointer; }
+  .ai-msg { background:var(--panel-2); padding:10px; border-radius:6px; margin-bottom:8px; white-space:pre-wrap; font-size:13px; }
+  .ai-msg button { float:right; font-size:12px; padding:2px 6px; cursor:pointer; }
+
+  @media (max-width: 900px) { .ai-panel { width: 100%; } }
 </style>
 </head>
 <body>
 <header>
   <div class="logo">QuickCode</div>
   <div class="actions">
+    <button id="turboBtn" class="on">Turbo: ON</button>
+    <button id="aiToggleBtn">🤖 AI</button>
     <button id="saveBtn">💾 Save</button>
     <button id="runBtn">▶ Run</button>
     <button id="downloadBtn">📥 Download</button>
@@ -104,110 +63,96 @@
 
 <main>
   <textarea id="codeArea" spellcheck="false" placeholder="Start coding here..."></textarea>
+
+  <div class="ai-panel" id="aiPanel">
+    <div class="panel-header">
+      <span>⚡ Turbo AI</span>
+      <button onclick="toggleAI()">×</button>
+    </div>
+    <div class="ai-chat" id="aiChat"></div>
+    <div class="ai-input">
+      <input id="aiMsg" placeholder="Code check karo ya pucho... Enter dabao">
+      <button onclick="sendMsg()">Send</button>
+    </div>
+  </div>
 </main>
 
 <script>
 (function() {
+  // ====== TUMHARI API KEY ======
+  const API_KEY = "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";
+  let turbo = true;
+  // ==============================
+
   const codeArea = document.getElementById('codeArea');
-  const saveBtn = document.getElementById('saveBtn');
-  const runBtn = document.getElementById('runBtn');
-  const downloadBtn = document.getElementById('downloadBtn');
-  const resetBtn = document.getElementById('resetBtn');
+  const aiPanel = document.getElementById('aiPanel');
+  const turboBtn = document.getElementById('turboBtn');
+  const aiChat = document.getElementById('aiChat');
 
-  const defaultCode = '<h1>Welcome to QuickCode</h1>\n<p>Write your code and click Run.</p>\n<button onclick="alert(\'Hello!\')">Click Me</button>';
+  const defaultCode = '<h1>Welcome to QuickCode</h1>\n<p>AI button dabao aur pucho: "is code me error hai?"</p>\n<button onclick="alert(\'Hello!\')">Click Me</button>';
 
-  function safeGet() {
+  // --- Editor Logic ---
+  function safeGet() { try { return localStorage.getItem('qc_code') || defaultCode; } catch(e) { return defaultCode; } }
+  function safeSet() { try { localStorage.setItem('qc_code', codeArea.value); } catch(e) {} }
+  function loadCode() { codeArea.value = safeGet(); }
+  codeArea.addEventListener('input', safeSet);
+
+  document.getElementById('saveBtn').onclick = () => { safeSet(); alert('Code Saved!'); };
+  document.getElementById('runBtn').onclick = () => { safeSet(); window.open(URL.createObjectURL(new Blob([`<!DOCTYPE html><html><body>${codeArea.value}</body></html>`], {type:'text/html'})), '_blank'); };
+  document.getElementById('downloadBtn').onclick = () => { const a=document.createElement('a'); a.href=URL.createObjectURL(new Blob([codeArea.value],{type:'text/html'})); a.download='code.html'; a.click(); };
+  document.getElementById('resetBtn').onclick = () => { if(confirm('Reset?')){localStorage.clear(); codeArea.value=defaultCode; safeSet();} };
+
+  // --- AI Panel Toggle ---
+  window.toggleAI = () => aiPanel.classList.toggle('open');
+  document.getElementById('aiToggleBtn').onclick = toggleAI;
+
+  // --- Turbo AI Logic ---
+  turboBtn.onclick = () => {
+    turbo =!turbo;
+    turboBtn.innerText = "Turbo: " + (turbo? "ON" : "OFF");
+    turboBtn.className = turbo? "on" : "off";
+  };
+
+  document.getElementById('aiMsg').addEventListener('keypress', e => { if(e.key==='Enter') sendMsg(); });
+
+  window.sendMsg = async () => {
+    let userMsg = document.getElementById("aiMsg").value;
+    if(!userMsg) return;
+    addAIMsg("Tum: " + userMsg);
+    document.getElementById("aiMsg").value = "";
+
+    let model = turbo? "llama3-8b-8192" : "llama3-70b-8192";
+    let max_tokens = turbo? 250 : 800;
+    let system_prompt = turbo
+     ? `Tum code reviewer ho. Rule: Sirf 4 line. 1.Accha/Normal 2.Wajah 3.Sudhaar 4.Fixed Code in \`\`\``
+      : `Tum senior developer ho. Detail me samjhao with code example.`;
+
+    let full_prompt = `Current Code:\n${codeArea.value}\n\nUser Question: ${userMsg}`;
+
     try {
-      const data = localStorage.getItem('qc_code');
-      return data || defaultCode;
-    } catch(e) {
-      return defaultCode;
-    }
+      let res = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+        method: "POST",
+        headers: { "Authorization": "Bearer " + API_KEY, "Content-Type": "application/json" },
+        body: JSON.stringify({
+          model: model, max_tokens: max_tokens,
+          messages: [{role:"system", content: system_prompt}, {role:"user", content: full_prompt}]
+        })
+      });
+      let data = await res.json();
+      let reply = data.choices[0].message.content;
+      addAIMsg("AI: " + reply, reply);
+    } catch(e) { addAIMsg("Error: API Key check karo ya net check karo"); }
+  };
+
+  function addAIMsg(text, codeToCopy=null) {
+    let div = document.createElement('div'); div.className='ai-msg';
+    if(codeToCopy && codeToCopy.includes('```')){
+      let code = codeToCopy.match(/```([\s\S]*?)```/)[1];
+      div.innerHTML = text + `<br><button onclick="copyCode(\`${code.replace(/`/g,'\\`')}\`)">Copy Code</button>`;
+    } else { div.innerText = text; }
+    aiChat.appendChild(div); aiChat.scrollTop = aiChat.scrollHeight;
   }
-
-  function safeSet() {
-    try {
-      localStorage.setItem('qc_code', codeArea.value);
-    } catch(e) {
-      console.log('Storage not available');
-    }
-  }
-
-  function loadCode() {
-    codeArea.value = safeGet();
-  }
-
-  codeArea.addEventListener('input', function() {
-    safeSet();
-  });
-
-  saveBtn.addEventListener('click', function() {
-    safeSet();
-    alert('Code Saved!');
-  });
-
-  runBtn.addEventListener('click', function() {
-    safeSet();
-    const code = codeArea.value;
-    const type = prompt('Run as which type?\nType: html, css, or js', 'html');
-    if (!type) return;
-    const ext = type.toLowerCase();
-    let blob, url;
-
-    if (ext === 'html') {
-      const full = `<!DOCTYPE html>\n<html>\n<head>\n<meta charset="UTF-8">\n<title>QuickCode</title>\n</head>\n<body>\n${code}\n</body>\n</html>`;
-      blob = new Blob([full], { type: 'text/html' });
-    } else if (ext === 'css') {
-      blob = new Blob([code], { type: 'text/css' });
-    } else if (ext === 'js') {
-      blob = new Blob([code], { type: 'application/javascript' });
-    } else {
-      alert('Invalid type. Use html, css, or js');
-      return;
-    }
-
-    url = URL.createObjectURL(blob);
-    window.open(url, '_blank');
-    setTimeout(() => URL.revokeObjectURL(url), 5000);
-  });
-
-  downloadBtn.addEventListener('click', function() {
-    safeSet();
-    const type = prompt('Download as which type?\nType: html, css, or js', 'html');
-    if (!type) return;
-    const ext = type.toLowerCase();
-    const code = codeArea.value;
-    let blob, filename = 'code.' + ext;
-
-    if (ext === 'html') {
-      const full = `<!DOCTYPE html>\n<html>\n<head>\n<meta charset="UTF-8">\n<title>QuickCode</title>\n</head>\n<body>\n${code}\n</body>\n</html>`;
-      blob = new Blob([full], { type: 'text/html' });
-    } else if (ext === 'css') {
-      blob = new Blob([code], { type: 'text/css' });
-    } else if (ext === 'js') {
-      blob = new Blob([code], { type: 'application/javascript' });
-    } else {
-      alert('Invalid type. Use html, css, or js');
-      return;
-    }
-
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = filename;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-  });
-
-  resetBtn.addEventListener('click', function() {
-    if (confirm('Reset code? This cannot be undone.')) {
-      try { localStorage.clear(); } catch(e) {}
-      codeArea.value = defaultCode;
-      safeSet();
-    }
-  });
+  window.copyCode = (code) => { codeArea.value = code; safeSet(); alert('Code editor me paste ho gaya!'); }
 
   loadCode();
 })();
