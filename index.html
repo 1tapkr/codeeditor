@@ -12,7 +12,6 @@
   }
     * { box-sizing: border-box; margin: 0; padding: 0; }
   body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', Roboto, Arial, sans-serif; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
-  
   header { background: var(--panel); padding: 10px 16px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--border); flex-wrap: wrap; gap: 8px; }
   .logo { font-size: 18px; font-weight: 600; color: var(--accent); }
   .actions { display: flex; gap: 8px; flex-wrap: wrap; }
@@ -22,19 +21,9 @@
   #turboBtn.on { background: var(--turbo-on); color:#000; }
   #turboBtn.off { background: var(--turbo-off); color:#fff; }
   #aiToggleBtn { background: var(--accent); color:#000; font-weight:bold; }
-
   main { flex: 1; position: relative; }
   textarea { width: 100%; height: 100%; background: var(--bg); color: var(--text); border: none; outline: none; resize: none; padding: 14px; font-family: 'Consolas', 'Monaco', monospace; font-size: 14px; line-height: 1.5; }
-
-  /* AI Panel - Floating */
-  .ai-panel { 
-    position: absolute; bottom: 0; right: 0; 
-    width: 40%; height: 100%; 
-    background: var(--panel); border-left: 1px solid var(--border);
-    display: flex; flex-direction: column;
-    transform: translateX(100%); transition: transform 0.3s ease;
-    z-index: 10;
-  }
+  .ai-panel { position: absolute; bottom: 0; right: 0; width: 40%; height: 100%; background: var(--panel); border-left: 1px solid var(--border); display: flex; flex-direction: column; transform: translateX(100%); transition: transform 0.3s ease; z-index: 10; }
   .ai-panel.open { transform: translateX(0); }
   .panel-header { padding: 8px 12px; background: var(--panel-2); border-bottom: 1px solid var(--border); font-weight: 600; display:flex; justify-content:space-between; }
   .panel-header button { background:none; border:none; color:var(--text); font-size:18px; cursor:pointer; }
@@ -46,7 +35,6 @@
   .ai-msg.error { background:#3d2626; color:#ff6b6b; }
   .ai-msg.loading { background:#2d3526; color:#ffd700; font-style: italic; }
   .ai-msg button { float:right; font-size:12px; padding:2px 6px; cursor:pointer; background:var(--accent); color:#000; border:none; border-radius:3px; }
-
   @media (max-width: 900px) { .ai-panel { width: 100%; } }
 </style>
 </head>
@@ -65,7 +53,6 @@
 
 <main>
   <textarea id="codeArea" spellcheck="false" placeholder="Start coding here..."></textarea>
-
   <div class="ai-panel" id="aiPanel">
     <div class="panel-header">
       <span>⚡ Turbo AI</span>
@@ -131,7 +118,11 @@
     let full_prompt = `Current Code:\n${codeArea.value}\n\nUser Question: ${userMsg}`;
 
     try {
-      let res = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+      // CORS FIX: Proxy use kiya hai
+      let apiUrl = "https://api.groq.com/openai/v1/chat/completions";
+      let proxyUrl = "https://api.allorigins.win/raw?url=" + encodeURIComponent(apiUrl);
+      
+      let res = await fetch(proxyUrl, {
         method: "POST",
         headers: { 
           "Authorization": "Bearer " + API_KEY, 
@@ -150,40 +141,19 @@
       removeLoadingMsg();
 
       if(!res.ok) {
-        let errorData = await res.json();
-        let errorMsg = errorData.error?.message || "Unknown error";
-        
-        if(res.status === 401) {
-          addAIMsg("❌ API Key invalid!", null, "error");
-        } else if(res.status === 429) {
-          addAIMsg("⏱️ Rate limit! Baad mein try karo", null, "error");
-        } else if(res.status === 500) {
-          addAIMsg("🔴 Server error. Baad mein try karo", null, "error");
-        } else {
-          addAIMsg(`❌ Error (${res.status}): ${errorMsg}`, null, "error");
-        }
+        let errorData = await res.json().catch(()=>({}));
+        let errorMsg = errorData.error?.message || "Request failed";
+        addAIMsg(`❌ Error ${res.status}: ${errorMsg}`, null, "error");
         isLoading = false;
         return;
       }
 
       let data = await res.json();
-      
-      if(!data.choices || !data.choices[0]?.message?.content) {
-        addAIMsg("❌ Unexpected response format", null, "error");
-        isLoading = false;
-        return;
-      }
-
       let reply = data.choices[0].message.content;
       addAIMsg("AI: " + reply, reply);
     } catch(e) { 
       removeLoadingMsg();
-      
-      if(e instanceof TypeError) {
-        addAIMsg("❌ Network error! Check internet", null, "error");
-      } else {
-        addAIMsg(`❌ Error: ${e.message}`, null, "error");
-      }
+      addAIMsg(`❌ Connection failed. Internet check karo`, null, "error");
     } finally {
       isLoading = false;
     }
