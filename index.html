@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Advanced Lite Code Editor</title>
+    <title>Advanced Lite Code Editor with Auto-Save</title>
     <style>
         * {
             box-sizing: border-box;
@@ -53,6 +53,7 @@
         }
         .btn-run { background-color: #00adb5; color: white; }
         .btn-download { background-color: #28a745; color: white; }
+        .btn-reset { background-color: #dc3545; color: white; }
         .btn-github { background-color: #24292e; color: white; border: 1px solid #444; }
 
         /* Main Workspace Container */
@@ -130,7 +131,7 @@
             background-color: #fff;
         }
 
-        /* Mobile Responsive View (For small networks/screens) */
+        /* Mobile Responsive View */
         @media (max-width: 768px) {
             .container { flex-direction: column; }
             .editor-section, .preview-section { width: 100%; height: 50%; }
@@ -144,6 +145,7 @@
         <div class="action-btns">
             <button class="btn-run" onclick="runCode()">▶ Run</button>
             <button class="btn-download" onclick="downloadCode()">📥 Download</button>
+            <button class="btn-reset" onclick="resetEditor()">🗑 Reset</button>
             <button class="btn-github" onclick="openGitHub()">🌐 GitHub</button>
         </div>
     </header>
@@ -154,42 +156,23 @@
             <div class="tabs-bar">
                 <button class="tab-btn active" onclick="switchTab(event, 'html-panel')">HTML</button>
                 <button class="tab-btn" onclick="switchTab(event, 'css-panel')">CSS</button>
-                <button class="tab-btn" onclick="switchTab(event, 'js-panel') font-color:yellow;">JavaScript</button>
+                <button class="tab-btn" onclick="switchTab(event, 'js-panel')" style="color: #ffca28;">JavaScript</button>
             </div>
             
             <div class="editor-content">
                 <!-- HTML Editor Box -->
                 <div id="html-panel" class="editor-box active">
-                    <textarea id="html-code" placeholder="HTML code yahan likhein..."><!-- Example -->
-<h1>Hello Buddy!</h1>
-<p>Tabs check karne ke liye upar CSS aur JS par click karein.</p>
-<button id="alertBtn">Click Karein</button></textarea>
+                    <textarea id="html-code" oninput="runCode()" placeholder="HTML code yahan likhein..."></textarea>
                 </div>
                 
                 <!-- CSS Editor Box -->
                 <div id="css-panel" class="editor-box">
-                    <textarea id="css-code" placeholder="CSS code yahan likhein...">body { 
-    text-align: center; 
-    font-family: sans-serif; 
-    background: #f4f4f4;
-    padding-top: 50px; 
-}
-h1 { color: #ff5722; }
-button { 
-    background: #00adb5; 
-    color: white; 
-    padding: 10px 20px; 
-    border: none; 
-    border-radius: 4px; 
-    cursor: pointer; 
-}</textarea>
+                    <textarea id="css-code" oninput="runCode()" placeholder="CSS code yahan likhein..."></textarea>
                 </div>
                 
                 <!-- JS Editor Box -->
                 <div id="js-panel" class="editor-box">
-                    <textarea id="js-code" placeholder="JavaScript code yahan likhein...">document.getElementById('alertBtn').addEventListener('click', () => {
-    alert('Badhai ho! JavaScript bhi kaam kar raha hai.');
-});</textarea>
+                    <textarea id="js-code" oninput="runCode()" placeholder="JavaScript code yahan likhein..."></textarea>
                 </div>
             </div>
         </div>
@@ -201,6 +184,11 @@ button {
     </div>
 
     <script>
+        // Default Template Definitions
+        const defaultHTML = `<h1>Hello Buddy!</h1>\n<p>Tabs check karne ke liye upar CSS aur JS par click karein.</p>\n<button id="alertBtn">Click Karein</button>`;
+        const defaultCSS = `body { \n    text-align: center; \n    font-family: sans-serif; \n    background: #f4f4f4;\n    padding-top: 50px; \n}\nh1 { color: #ff5722; }\nbutton { \n    background: #00adb5; \n    color: white; \n    padding: 10px 20px; \n    border: none; \n    border-radius: 4px; \n    cursor: pointer; \n}`;
+        const defaultJS = `document.getElementById('alertBtn').addEventListener('click', () => {\n    alert('Badhai ho! JavaScript bhi kaam kar raha hai.');\n});`;
+
         // Tab switching logic
         function switchTab(event, panelId) {
             const boxes = document.getElementsByClassName("editor-box");
@@ -217,12 +205,17 @@ button {
             event.currentTarget.classList.add("active");
         }
 
-        // Live Code Compilation logic
+        // Live Code Compilation & LocalStorage Saving
         function runCode() {
             const htmlCode = document.getElementById("html-code").value;
             const cssCode = document.getElementById("css-code").value;
             const jsCode = document.getElementById("js-code").value;
             const output = document.getElementById("output");
+
+            // AUTO-SAVE: Har keystroke par browser memory mein code save ho raha hai
+            localStorage.setItem("editor_html", htmlCode);
+            localStorage.setItem("editor_css", cssCode);
+            localStorage.setItem("editor_js", jsCode);
 
             const iframeDoc = output.contentDocument || output.contentWindow.document;
             
@@ -237,9 +230,7 @@ button {
             const cssCode = document.getElementById("css-code").value;
             const jsCode = document.getElementById("js-code").value;
 
-            // Teeno code ko jodkar ek file banana
-            const fullProjectCode = `
-<!DOCTYPE html>
+            const fullProjectCode = `<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -255,10 +246,20 @@ button {
             const blob = new Blob([fullProjectCode], { type: "text/html" });
             const a = document.createElement("a");
             a.href = URL.createObjectURL(blob);
-            a.download = "my_project.html"; // File ka default naam
+            a.download = "my_project.html"; 
             document.body.appendChild(a);
             a.click();
             document.body.removeChild(a);
+        }
+
+        // Reset memory to default values
+        function resetEditor() {
+            if (confirm("Kya aap sach mein apna code reset karke starting template par jana chahte hain?")) {
+                localStorage.removeItem("editor_html");
+                localStorage.removeItem("editor_css");
+                localStorage.removeItem("editor_js");
+                loadSavedOrTemplate();
+            }
         }
 
         // Redirect to GitHub
@@ -266,10 +267,12 @@ button {
             window.open("https://github.com", "_blank");
         }
 
-        // Pehli baar load hone par run karein
-        window.onload = runCode;
-    </script>
+        // Master function to load saved items or default templates
+        function loadSavedOrTemplate() {
+            document.getElementById("html-code").value = localStorage.getItem("editor_html") || defaultHTML;
+            document.getElementById("css-code").value = localStorage.getItem("editor_css") || defaultCSS;
+            document.getElementById("js-code").value = localStorage.getItem("editor_js") || defaultJS;
+            runCode();
+        }
 
-</body>
-</html>
-
+        // Window load par run karein
