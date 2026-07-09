@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>QuickCode + Turbo AI</title>
+<title>QuickCode + Turbo AI v2</title>
 <style>
   :root {
     --bg: #1e1e1e; --panel: #252526; --panel-2: #2d2d2d; --text: #d4d4d4;
@@ -40,7 +40,7 @@
 </head>
 <body>
 <header>
-  <div class="logo">QuickCode</div>
+  <div class="logo">QuickCode v2</div>
   <div class="actions">
     <button id="turboBtn" class="on">Turbo: ON</button>
     <button id="aiToggleBtn">🤖 AI</button>
@@ -55,12 +55,12 @@
   <textarea id="codeArea" spellcheck="false" placeholder="Start coding here..."></textarea>
   <div class="ai-panel" id="aiPanel">
     <div class="panel-header">
-      <span>⚡ Turbo AI</span>
+      <span>⚡ Turbo AI - Llama 3.1</span>
       <button onclick="toggleAI()">×</button>
     </div>
     <div class="ai-chat" id="aiChat"></div>
     <div class="ai-input">
-      <input id="aiMsg" placeholder="Code check karo ya pucho... Enter dabao">
+      <input id="aiMsg" placeholder="Code check karo... Enter dabao">
       <button onclick="sendMsg()">Send</button>
     </div>
   </div>
@@ -68,7 +68,7 @@
 
 <script>
 (function() {
-  const API_KEY = "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";
+  const API_KEY = "yaha_nayi_key_daalo"; // STEP 1: Isko change karo
   let turbo = true;
   let isLoading = false;
 
@@ -77,7 +77,7 @@
   const turboBtn = document.getElementById('turboBtn');
   const aiChat = document.getElementById('aiChat');
 
-  const defaultCode = '<h1>Welcome to QuickCode</h1>\n<p>AI button dabao aur pucho: "is code me error hai?"</p>\n<button onclick="alert(\'Hello!\')">Click Me</button>';
+  const defaultCode = '<h1>Welcome to QuickCode v2</h1>\n<p>AI se pucho: "is code me error hai?"</p>\n<button onclick="alert(\'Hello!\')">Click Me</button>';
 
   function safeGet() { try { return localStorage.getItem('qc_code') || defaultCode; } catch(e) { return defaultCode; } }
   function safeSet() { try { localStorage.setItem('qc_code', codeArea.value); } catch(e) {} }
@@ -103,24 +103,27 @@
   window.sendMsg = async () => {
     let userMsg = document.getElementById("aiMsg").value.trim();
     if(!userMsg || isLoading) return;
+    if(API_KEY === "yaha_nayi_key_daalo"){
+        alert("Bhai pehle API Key daal de line 3 me");
+        return;
+    }
     
     isLoading = true;
     addAIMsg("Tum: " + userMsg);
     document.getElementById("aiMsg").value = "";
     addAIMsg("⏳ Processing...", null, "loading");
 
-    let model = turbo ? "llama3-8b-8192" : "llama3-70b-8192";
-    let max_tokens = turbo ? 250 : 800;
+    let model = turbo ? "llama-3.1-8b-instant" : "llama-3.1-70b-versatile"; // NAYA MODEL
+    let max_tokens = turbo ? 200 : 600;
     let system_prompt = turbo
-     ? `Tum code reviewer ho. Rule: Sirf 4 line. 1.Accha/Normal 2.Wajah 3.Sudhaar 4.Fixed Code in \`\`\``
+     ? `Tum code reviewer ho. Rule: Sirf 4 line. 1.Accha 2.Wajah 3.Sudhaar 4.Fixed Code in \`\`\``
       : `Tum senior developer ho. Detail me samjhao with code example.`;
 
     let full_prompt = `Current Code:\n${codeArea.value}\n\nUser Question: ${userMsg}`;
 
     try {
-      // CORS FIX: Proxy use kiya hai
       let apiUrl = "https://api.groq.com/openai/v1/chat/completions";
-      let proxyUrl = "https://api.allorigins.win/raw?url=" + encodeURIComponent(apiUrl);
+      let proxyUrl = "https://corsproxy.io/?" + encodeURIComponent(apiUrl); // YE FAST HAI
       
       let res = await fetch(proxyUrl, {
         method: "POST",
@@ -131,6 +134,7 @@
         body: JSON.stringify({
           model: model, 
           max_tokens: max_tokens,
+          temperature: 0.7,
           messages: [
             {role: "system", content: system_prompt}, 
             {role: "user", content: full_prompt}
@@ -142,8 +146,7 @@
 
       if(!res.ok) {
         let errorData = await res.json().catch(()=>({}));
-        let errorMsg = errorData.error?.message || "Request failed";
-        addAIMsg(`❌ Error ${res.status}: ${errorMsg}`, null, "error");
+        addAIMsg(`❌ Error ${res.status}: ${errorData.error?.message || "API Error"}`, null, "error");
         isLoading = false;
         return;
       }
@@ -153,7 +156,7 @@
       addAIMsg("AI: " + reply, reply);
     } catch(e) { 
       removeLoadingMsg();
-      addAIMsg(`❌ Connection failed. Internet check karo`, null, "error");
+      addAIMsg(`❌ Connection failed. Internet ya Proxy down hai`, null, "error");
     } finally {
       isLoading = false;
     }
@@ -172,7 +175,8 @@
     
     if(codeToCopy && codeToCopy.includes('```')){
       try {
-        let code = codeToCopy.match(/```([\s\S]*?)```/)[1];
+        let codeBlocks = codeToCopy.match(/```([\s\S]*?)```/g);
+        let code = codeBlocks ? codeBlocks[0].replace(/```/g, '') : codeToCopy;
         div.innerHTML = text + `<br><button onclick="copyCode(\`${code.replace(/`/g,'\\`')}\`)">📋 Copy</button>`;
       } catch(e) {
         div.innerText = text;
