@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>CodePlay Editor</title>
+<title>QuickCode Editor</title>
 <style>
   :root {
     --bg: #1e1e1e;
@@ -14,13 +14,12 @@
     --border: #3c3c3c;
     --btn: #3a3a3a;
     --btn-hover: #4a4a4a;
-    --tab-active: #1e1e1e;
   }
     * { box-sizing: border-box; margin: 0; padding: 0; }
   body {
     background: var(--bg);
     color: var(--text);
-    font-family: 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    font-family: 'Segoe UI', Roboto, Arial, sans-serif;
     height: 100vh;
     display: flex;
     flex-direction: column;
@@ -33,17 +32,27 @@
     align-items: center;
     justify-content: space-between;
     border-bottom: 1px solid var(--border);
-    flex-shrink: 0;
+    flex-wrap: wrap;
+    gap: 8px;
   }
  .logo {
     font-size: 18px;
     font-weight: 600;
     color: var(--accent);
-    letter-spacing: 0.5px;
+  }
+ .file-name {
+    background: var(--panel-2);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 6px 10px;
+    border-radius: 4px;
+    font-size: 14px;
+    width: 160px;
   }
  .actions {
     display: flex;
     gap: 8px;
+    flex-wrap: wrap;
   }
  .actions button {
     background: var(--btn);
@@ -59,47 +68,9 @@
     background: var(--btn-hover);
   }
   main {
-    display: flex;
     flex: 1;
+    display: flex;
     overflow: hidden;
-  }
- .editor,.preview {
-    width: 50%;
-    height: 100%;
-    display: flex;
-    flex-direction: column;
-  }
- .tabs {
-    display: flex;
-    background: var(--panel);
-    border-bottom: 1px solid var(--border);
-    flex-shrink: 0;
-  }
- .tab {
-    padding: 10px 16px;
-    cursor: pointer;
-    background: var(--panel-2);
-    border-right: 1px solid var(--border);
-    font-size: 14px;
-    transition: background 0.2s ease;
-  }
- .tab.active {
-    background: var(--tab-active);
-    color: var(--accent);
-    border-bottom: 2px solid var(--accent);
-  }
- .editor-area {
-    flex: 1;
-    position: relative;
-    background: var(--bg);
-  }
- .editor-pane {
-    width: 100%;
-    height: 100%;
-    display: none;
-  }
- .editor-pane.active {
-    display: block;
   }
   textarea {
     width: 100%;
@@ -109,32 +80,24 @@
     border: none;
     outline: none;
     resize: none;
-    padding: 12px;
+    padding: 14px;
     font-family: 'Consolas', 'Monaco', monospace;
     font-size: 14px;
-    line-height: 1.5;
-  }
-  iframe {
-    flex: 1;
-    width: 100%;
-    border: none;
-    background: #ffffff;
+    line-height: 1.6;
   }
   @media (max-width: 768px) {
-    main {
-      flex-direction: column;
-    }
-   .editor,.preview {
-      width: 100%;
-      height: 50%;
-    }
+    header { justify-content: center; }
+   .file-name { width: 100%; }
   }
 </style>
 </head>
 <body>
 <header>
-  <div class="logo">CodePlay</div>
+  <div class="logo">QuickCode</div>
+  <input type="text" id="fileName" class="file-name" placeholder="file1">
   <div class="actions">
+    <button id="newBtn">+ New</button>
+    <button id="saveBtn">💾 Save</button>
     <button id="runBtn">▶ Run</button>
     <button id="downloadBtn">📥 Download</button>
     <button id="resetBtn">🗑 Reset</button>
@@ -143,154 +106,144 @@
 </header>
 
 <main>
-  <section class="editor">
-    <div class="tabs">
-      <div class="tab active" data-tab="html">HTML</div>
-      <div class="tab" data-tab="css">CSS</div>
-      <div class="tab" data-tab="js">JavaScript</div>
-    </div>
-    <div class="editor-area">
-      <div class="editor-pane active" id="pane-html">
-        <textarea id="htmlCode" spellcheck="false"></textarea>
-      </div>
-      <div class="editor-pane" id="pane-css">
-        <textarea id="cssCode" spellcheck="false"></textarea>
-      </div>
-      <div class="editor-pane" id="pane-js">
-        <textarea id="jsCode" spellcheck="false"></textarea>
-      </div>
-    </div>
-  </section>
-
-  <section class="preview">
-    <iframe id="previewFrame"></iframe>
-  </section>
+  <textarea id="codeArea" spellcheck="false" placeholder="Start coding here..."></textarea>
 </main>
 
 <script>
 (function() {
-  const htmlEl = document.getElementById('htmlCode');
-  const cssEl = document.getElementById('cssCode');
-  const jsEl = document.getElementById('jsCode');
-  const iframe = document.getElementById('previewFrame');
-  const tabs = document.querySelectorAll('.tab');
-  const panes = document.querySelectorAll('.editor-pane');
+  const codeArea = document.getElementById('codeArea');
+  const fileNameInput = document.getElementById('fileName');
+  const newBtn = document.getElementById('newBtn');
+  const saveBtn = document.getElementById('saveBtn');
   const runBtn = document.getElementById('runBtn');
   const downloadBtn = document.getElementById('downloadBtn');
   const resetBtn = document.getElementById('resetBtn');
   const githubBtn = document.getElementById('githubBtn');
 
-  const defaultState = {
-    html: '<h1>Welcome to CodePlay</h1>\n<p>Write HTML, CSS, and JavaScript and see live results instantly.</p>\n<button id="alertBtn">Click Me</button>',
-    css: 'body {\n font-family: Arial, sans-serif;\n text-align: center;\n padding: 40px;\n background: #f5f5f5;\n}\n\nh1 {\n color: #2196f3;\n}\n\np {\n color: #555;\n}\n\n#alertBtn {\n padding: 10px 20px;\n border: 2px solid #2196f3;\n background: #fff;\n color: #2196f3;\n border-radius: 4px;\n cursor: pointer;\n}\n\n#alertBtn:hover {\n background: #2196f3;\n color: #fff;\n}',
-    js: 'document.getElementById("alertBtn").addEventListener("click", function() {\n alert("Hello from CodePlay!");\n});'
-  };
-
-  let memoryState = {...defaultState };
+  let files = {};
+  let currentFile = 'file1';
   let useStorage = true;
 
-  function safeGet(key) {
+  const defaultCode = '<h1>Welcome to QuickCode</h1>\n<p>Write your code and click Run.</p>\n<button onclick="alert(\'Hello!\')">Click Me</button>';
+
+  function safeGet() {
     try {
-      const val = localStorage.getItem(key);
-      return val!== null? val : null;
-    } catch (e) {
+      const data = localStorage.getItem('qc_files');
+      const name = localStorage.getItem('qc_current');
+      return { data: data? JSON.parse(data) : null, name };
+    } catch(e) {
       useStorage = false;
-      return null;
+      return { data: null, name: null };
     }
   }
 
-  function safeSet(key, value) {
+  function safeSet() {
     try {
-      localStorage.setItem(key, value);
-    } catch (e) {
-      useStorage = false;
-      memoryState[key.replace('editor_', '')] = value;
-    }
-  }
-
-  function safeClear() {
-    try {
-      localStorage.removeItem('editor_html');
-      localStorage.removeItem('editor_css');
-      localStorage.removeItem('editor_js');
-    } catch (e) {
+      localStorage.setItem('qc_files', JSON.stringify(files));
+      localStorage.setItem('qc_current', currentFile);
+    } catch(e) {
       useStorage = false;
     }
-    memoryState = {...defaultState };
   }
 
-  function getState(key) {
-    const stored = safeGet('editor_' + key);
-    return stored!== null? stored : memoryState[key];
-  }
-
-  function setState(key, value) {
-    safeSet('editor_' + key, value);
-    memoryState[key] = value;
-  }
-
-  function loadInitial() {
-    htmlEl.value = getState('html');
-    cssEl.value = getState('css');
-    jsEl.value = getState('js');
-    runCode();
-  }
-
-  function runCode() {
-    const html = htmlEl.value;
-    const css = '<style>' + cssEl.value + '</style>';
-    const js = '<script>' + jsEl.value + '<\/script>';
-    const doc = iframe.contentDocument || iframe.contentWindow.document;
-    doc.open();
-    doc.write(html + css + js);
-    doc.close();
-  }
-
-  function debounce(fn, delay) {
-    let t;
-    return function() {
-      clearTimeout(t);
-      t = setTimeout(fn, delay);
+  function loadFiles() {
+    const { data, name } = safeGet();
+    if (data) {
+      files = data;
+      currentFile = name || Object.keys(files)[0];
+    } else {
+      files = { file1: defaultCode };
+      currentFile = 'file1';
     }
+    fileNameInput.value = currentFile;
+    codeArea.value = files[currentFile] || '';
   }
 
-  const debouncedRun = debounce(runCode, 300);
+  function saveCurrent() {
+    files[currentFile] = codeArea.value;
+    safeSet();
+  }
 
-  htmlEl.addEventListener('input', function() {
-    setState('html', htmlEl.value);
-    debouncedRun();
-  });
-  cssEl.addEventListener('input', function() {
-    setState('css', cssEl.value);
-    debouncedRun();
-  });
-  jsEl.addEventListener('input', function() {
-    setState('js', jsEl.value);
-    debouncedRun();
-  });
-
-  tabs.forEach(tab => {
-    tab.addEventListener('click', function() {
-      const target = this.dataset.tab;
-      tabs.forEach(t => t.classList.remove('active'));
-      panes.forEach(p => p.classList.remove('active'));
-      this.classList.add('active');
-      document.getElementById('pane-' + target).classList.add('active');
-    });
+  fileNameInput.addEventListener('change', function() {
+    saveCurrent();
+    const newName = this.value.trim() || 'file1';
+    if (!files[newName]) files[newName] = '';
+    currentFile = newName;
+    codeArea.value = files[currentFile];
+    safeSet();
   });
 
-  runBtn.addEventListener('click', runCode);
+  codeArea.addEventListener('input', function() {
+    files[currentFile] = codeArea.value;
+    safeSet();
+  });
+
+  newBtn.addEventListener('click', function() {
+    saveCurrent();
+    const name = prompt('Enter new file name:', 'file' + (Object.keys(files).length + 1));
+    if (name) {
+      currentFile = name;
+      files[currentFile] = '';
+      fileNameInput.value = currentFile;
+      codeArea.value = '';
+      safeSet();
+    }
+  });
+
+  saveBtn.addEventListener('click', function() {
+    saveCurrent();
+    alert('Saved: ' + currentFile);
+  });
+
+  runBtn.addEventListener('click', function() {
+    saveCurrent();
+    const type = prompt('Save and run as which type?\nType: html, css, or js', 'html');
+    if (!type) return;
+    const ext = type.toLowerCase();
+    const code = codeArea.value;
+    let blob, url;
+
+    if (ext === 'html') {
+      const full = `<!DOCTYPE html>\n<html>\n<head>\n<meta charset="UTF-8">\n<title>${currentFile}</title>\n</head>\n<body>\n${code}\n</body>\n</html>`;
+      blob = new Blob([full], { type: 'text/html' });
+    } else if (ext === 'css') {
+      blob = new Blob([code], { type: 'text/css' });
+    } else if (ext === 'js') {
+      blob = new Blob([code], { type: 'application/javascript' });
+    } else {
+      alert('Invalid type. Use html, css, or js');
+      return;
+    }
+
+    url = URL.createObjectURL(blob);
+    window.open(url, '_blank');
+    setTimeout(() => URL.revokeObjectURL(url), 5000);
+  });
 
   downloadBtn.addEventListener('click', function() {
-    const html = htmlEl.value;
-    const css = cssEl.value;
-    const js = jsEl.value;
-    const fullDoc = `<!DOCTYPE html>\n<html lang="en">\n<head>\n<meta charset="UTF-8">\n<meta name="viewport" content="width=device-width, initial-scale=1.0">\n<title>Exported Page</title>\n<style>\n${css}\n</style>\n</head>\n<body>\n${html}\n<script>\n${js}\n<\/script>\n</body>\n</html>`;
-    const blob = new Blob([fullDoc], { type: 'text/html' });
+    saveCurrent();
+    const type = prompt('Download as which type?\nType: html, css, or js', 'html');
+    if (!type) return;
+    const ext = type.toLowerCase();
+    const code = codeArea.value;
+    let blob, filename = currentFile + '.' + ext;
+
+    if (ext === 'html') {
+      const full = `<!DOCTYPE html>\n<html>\n<head>\n<meta charset="UTF-8">\n<title>${currentFile}</title>\n</head>\n<body>\n${code}\n</body>\n</html>`;
+      blob = new Blob([full], { type: 'text/html' });
+    } else if (ext === 'css') {
+      blob = new Blob([code], { type: 'text/css' });
+    } else if (ext === 'js') {
+      blob = new Blob([code], { type: 'application/javascript' });
+    } else {
+      alert('Invalid type. Use html, css, or js');
+      return;
+    }
+
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = 'index.html';
+    a.download = filename;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
@@ -298,12 +251,13 @@
   });
 
   resetBtn.addEventListener('click', function() {
-    if (confirm('Are you sure you want to reset all code? This cannot be undone.')) {
-      safeClear();
-      htmlEl.value = defaultState.html;
-      cssEl.value = defaultState.css;
-      jsEl.value = defaultState.js;
-      runCode();
+    if (confirm('Reset all files? This cannot be undone.')) {
+      try { localStorage.clear(); } catch(e) {}
+      files = { file1: defaultCode };
+      currentFile = 'file1';
+      fileNameInput.value = currentFile;
+      codeArea.value = defaultCode;
+      safeSet();
     }
   });
 
@@ -311,7 +265,7 @@
     window.open('https://github.com', '_blank', 'noopener,noreferrer');
   });
 
-  loadInitial();
+  loadFiles();
 })();
 </script>
 </body>
