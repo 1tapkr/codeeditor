@@ -24,7 +24,7 @@
   #aiToggleBtn { background: var(--accent); color:#000; font-weight:bold; }
 
   main { flex: 1; position: relative; }
-  textarea { width: 100%; height: 100%; background: var(--bg); color: var(--text); border: none; outline: none; resize: none; padding: 14px; font-family: 'Consolas', 'Monaco', monospace; font-size: 14px; line-height: 1.6; }
+  textarea { width: 100%; height: 100%; background: var(--bg); color: var(--text); border: none; outline: none; resize: none; padding: 14px; font-family: 'Consolas', 'Monaco', monospace; font-size: 14px; line-height: 1.5; }
 
   /* AI Panel - Floating */
   .ai-panel { 
@@ -41,9 +41,11 @@
   .ai-chat { flex:1; padding:10px; overflow-y:auto; }
   .ai-input { display:flex; padding:10px; border-top:1px solid var(--border); gap:8px; }
   .ai-input input { flex:1; padding:8px; background:var(--panel-2); border:1px solid var(--border); color:var(--text); border-radius:4px; }
-  .ai-input button { padding:8px 12px; background:var(--accent); border:none; color:#000; border-radius:4px; cursor:pointer; }
+  .ai-input button { padding:8px 12px; background:var(--accent); border:none; color:#000; border-radius:4px; cursor:pointer; font-weight: 600; }
   .ai-msg { background:var(--panel-2); padding:10px; border-radius:6px; margin-bottom:8px; white-space:pre-wrap; font-size:13px; }
-  .ai-msg button { float:right; font-size:12px; padding:2px 6px; cursor:pointer; }
+  .ai-msg.error { background:#3d2626; color:#ff6b6b; }
+  .ai-msg.loading { background:#2d3526; color:#ffd700; font-style: italic; }
+  .ai-msg button { float:right; font-size:12px; padding:2px 6px; cursor:pointer; background:var(--accent); color:#000; border:none; border-radius:3px; }
 
   @media (max-width: 900px) { .ai-panel { width: 100%; } }
 </style>
@@ -79,10 +81,9 @@
 
 <script>
 (function() {
-  // ====== TUMHARI API KEY ======
   const API_KEY = "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";
   let turbo = true;
-  // ==============================
+  let isLoading = false;
 
   const codeArea = document.getElementById('codeArea');
   const aiPanel = document.getElementById('aiPanel');
@@ -91,7 +92,6 @@
 
   const defaultCode = '<h1>Welcome to QuickCode</h1>\n<p>AI button dabao aur pucho: "is code me error hai?"</p>\n<button onclick="alert(\'Hello!\')">Click Me</button>';
 
-  // --- Editor Logic ---
   function safeGet() { try { return localStorage.getItem('qc_code') || defaultCode; } catch(e) { return defaultCode; } }
   function safeSet() { try { localStorage.setItem('qc_code', codeArea.value); } catch(e) {} }
   function loadCode() { codeArea.value = safeGet(); }
@@ -102,27 +102,28 @@
   document.getElementById('downloadBtn').onclick = () => { const a=document.createElement('a'); a.href=URL.createObjectURL(new Blob([codeArea.value],{type:'text/html'})); a.download='code.html'; a.click(); };
   document.getElementById('resetBtn').onclick = () => { if(confirm('Reset?')){localStorage.clear(); codeArea.value=defaultCode; safeSet();} };
 
-  // --- AI Panel Toggle ---
   window.toggleAI = () => aiPanel.classList.toggle('open');
   document.getElementById('aiToggleBtn').onclick = toggleAI;
 
-  // --- Turbo AI Logic ---
   turboBtn.onclick = () => {
-    turbo =!turbo;
-    turboBtn.innerText = "Turbo: " + (turbo? "ON" : "OFF");
-    turboBtn.className = turbo? "on" : "off";
+    turbo = !turbo;
+    turboBtn.innerText = "Turbo: " + (turbo ? "ON" : "OFF");
+    turboBtn.className = turbo ? "on" : "off";
   };
 
-  document.getElementById('aiMsg').addEventListener('keypress', e => { if(e.key==='Enter') sendMsg(); });
+  document.getElementById('aiMsg').addEventListener('keypress', e => { if(e.key==='Enter' && !isLoading) sendMsg(); });
 
   window.sendMsg = async () => {
-    let userMsg = document.getElementById("aiMsg").value;
-    if(!userMsg) return;
+    let userMsg = document.getElementById("aiMsg").value.trim();
+    if(!userMsg || isLoading) return;
+    
+    isLoading = true;
     addAIMsg("Tum: " + userMsg);
     document.getElementById("aiMsg").value = "";
+    addAIMsg("⏳ Processing...", null, "loading");
 
-    let model = turbo? "llama3-8b-8192" : "llama3-70b-8192";
-    let max_tokens = turbo? 250 : 800;
+    let model = turbo ? "llama3-8b-8192" : "llama3-70b-8192";
+    let max_tokens = turbo ? 250 : 800;
     let system_prompt = turbo
      ? `Tum code reviewer ho. Rule: Sirf 4 line. 1.Accha/Normal 2.Wajah 3.Sudhaar 4.Fixed Code in \`\`\``
       : `Tum senior developer ho. Detail me samjhao with code example.`;
@@ -132,27 +133,93 @@
     try {
       let res = await fetch("https://api.groq.com/openai/v1/chat/completions", {
         method: "POST",
-        headers: { "Authorization": "Bearer " + API_KEY, "Content-Type": "application/json" },
+        headers: { 
+          "Authorization": "Bearer " + API_KEY, 
+          "Content-Type": "application/json"
+        },
         body: JSON.stringify({
-          model: model, max_tokens: max_tokens,
-          messages: [{role:"system", content: system_prompt}, {role:"user", content: full_prompt}]
+          model: model, 
+          max_tokens: max_tokens,
+          messages: [
+            {role: "system", content: system_prompt}, 
+            {role: "user", content: full_prompt}
+          ]
         })
       });
+
+      removeLoadingMsg();
+
+      if(!res.ok) {
+        let errorData = await res.json();
+        let errorMsg = errorData.error?.message || "Unknown error";
+        
+        if(res.status === 401) {
+          addAIMsg("❌ API Key invalid!", null, "error");
+        } else if(res.status === 429) {
+          addAIMsg("⏱️ Rate limit! Baad mein try karo", null, "error");
+        } else if(res.status === 500) {
+          addAIMsg("🔴 Server error. Baad mein try karo", null, "error");
+        } else {
+          addAIMsg(`❌ Error (${res.status}): ${errorMsg}`, null, "error");
+        }
+        isLoading = false;
+        return;
+      }
+
       let data = await res.json();
+      
+      if(!data.choices || !data.choices[0]?.message?.content) {
+        addAIMsg("❌ Unexpected response format", null, "error");
+        isLoading = false;
+        return;
+      }
+
       let reply = data.choices[0].message.content;
       addAIMsg("AI: " + reply, reply);
-    } catch(e) { addAIMsg("Error: API Key check karo ya net check karo"); }
+    } catch(e) { 
+      removeLoadingMsg();
+      
+      if(e instanceof TypeError) {
+        addAIMsg("❌ Network error! Check internet", null, "error");
+      } else {
+        addAIMsg(`❌ Error: ${e.message}`, null, "error");
+      }
+    } finally {
+      isLoading = false;
+    }
   };
 
-  function addAIMsg(text, codeToCopy=null) {
-    let div = document.createElement('div'); div.className='ai-msg';
-    if(codeToCopy && codeToCopy.includes('```')){
-      let code = codeToCopy.match(/```([\s\S]*?)```/)[1];
-      div.innerHTML = text + `<br><button onclick="copyCode(\`${code.replace(/`/g,'\\`')}\`)">Copy Code</button>`;
-    } else { div.innerText = text; }
-    aiChat.appendChild(div); aiChat.scrollTop = aiChat.scrollHeight;
+  function removeLoadingMsg() {
+    let lastMsg = aiChat.lastElementChild;
+    if(lastMsg && lastMsg.textContent.includes("⏳")) {
+      lastMsg.remove();
+    }
   }
-  window.copyCode = (code) => { codeArea.value = code; safeSet(); alert('Code editor me paste ho gaya!'); }
+
+  function addAIMsg(text, codeToCopy=null, msgType="normal") {
+    let div = document.createElement('div'); 
+    div.className = 'ai-msg ' + msgType;
+    
+    if(codeToCopy && codeToCopy.includes('```')){
+      try {
+        let code = codeToCopy.match(/```([\s\S]*?)```/)[1];
+        div.innerHTML = text + `<br><button onclick="copyCode(\`${code.replace(/`/g,'\\`')}\`)">📋 Copy</button>`;
+      } catch(e) {
+        div.innerText = text;
+      }
+    } else { 
+      div.innerText = text; 
+    }
+    
+    aiChat.appendChild(div); 
+    aiChat.scrollTop = aiChat.scrollHeight;
+  }
+  
+  window.copyCode = (code) => { 
+    codeArea.value = code; 
+    safeSet(); 
+    alert('✅ Code paste ho gaya!'); 
+  }
 
   loadCode();
 })();
