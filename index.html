@@ -94,14 +94,11 @@
 <body>
 <header>
   <div class="logo">QuickCode</div>
-  <input type="text" id="fileName" class="file-name" placeholder="file1">
   <div class="actions">
-    <button id="newBtn">+ New</button>
     <button id="saveBtn">💾 Save</button>
     <button id="runBtn">▶ Run</button>
     <button id="downloadBtn">📥 Download</button>
-    <button id="resetBtn">🗑 Reset</button>
-    <button id="githubBtn">🌐 GitHub</button>
+    <button id="resetBtn">🔄 Reset</button>
   </div>
 </header>
 
@@ -112,99 +109,53 @@
 <script>
 (function() {
   const codeArea = document.getElementById('codeArea');
-  const fileNameInput = document.getElementById('fileName');
-  const newBtn = document.getElementById('newBtn');
   const saveBtn = document.getElementById('saveBtn');
   const runBtn = document.getElementById('runBtn');
   const downloadBtn = document.getElementById('downloadBtn');
   const resetBtn = document.getElementById('resetBtn');
-  const githubBtn = document.getElementById('githubBtn');
-
-  let files = {};
-  let currentFile = 'file1';
-  let useStorage = true;
 
   const defaultCode = '<h1>Welcome to QuickCode</h1>\n<p>Write your code and click Run.</p>\n<button onclick="alert(\'Hello!\')">Click Me</button>';
 
   function safeGet() {
     try {
-      const data = localStorage.getItem('qc_files');
-      const name = localStorage.getItem('qc_current');
-      return { data: data? JSON.parse(data) : null, name };
+      const data = localStorage.getItem('qc_code');
+      return data || defaultCode;
     } catch(e) {
-      useStorage = false;
-      return { data: null, name: null };
+      return defaultCode;
     }
   }
 
   function safeSet() {
     try {
-      localStorage.setItem('qc_files', JSON.stringify(files));
-      localStorage.setItem('qc_current', currentFile);
+      localStorage.setItem('qc_code', codeArea.value);
     } catch(e) {
-      useStorage = false;
+      console.log('Storage not available');
     }
   }
 
-  function loadFiles() {
-    const { data, name } = safeGet();
-    if (data) {
-      files = data;
-      currentFile = name || Object.keys(files)[0];
-    } else {
-      files = { file1: defaultCode };
-      currentFile = 'file1';
-    }
-    fileNameInput.value = currentFile;
-    codeArea.value = files[currentFile] || '';
+  function loadCode() {
+    codeArea.value = safeGet();
   }
-
-  function saveCurrent() {
-    files[currentFile] = codeArea.value;
-    safeSet();
-  }
-
-  fileNameInput.addEventListener('change', function() {
-    saveCurrent();
-    const newName = this.value.trim() || 'file1';
-    if (!files[newName]) files[newName] = '';
-    currentFile = newName;
-    codeArea.value = files[currentFile];
-    safeSet();
-  });
 
   codeArea.addEventListener('input', function() {
-    files[currentFile] = codeArea.value;
     safeSet();
-  });
-
-  newBtn.addEventListener('click', function() {
-    saveCurrent();
-    const name = prompt('Enter new file name:', 'file' + (Object.keys(files).length + 1));
-    if (name) {
-      currentFile = name;
-      files[currentFile] = '';
-      fileNameInput.value = currentFile;
-      codeArea.value = '';
-      safeSet();
-    }
   });
 
   saveBtn.addEventListener('click', function() {
-    saveCurrent();
-    alert('Saved: ' + currentFile);
+    safeSet();
+    alert('Code Saved!');
   });
 
   runBtn.addEventListener('click', function() {
-    saveCurrent();
-    const type = prompt('Save and run as which type?\nType: html, css, or js', 'html');
+    safeSet();
+    const code = codeArea.value;
+    const type = prompt('Run as which type?\nType: html, css, or js', 'html');
     if (!type) return;
     const ext = type.toLowerCase();
-    const code = codeArea.value;
     let blob, url;
 
     if (ext === 'html') {
-      const full = `<!DOCTYPE html>\n<html>\n<head>\n<meta charset="UTF-8">\n<title>${currentFile}</title>\n</head>\n<body>\n${code}\n</body>\n</html>`;
+      const full = `<!DOCTYPE html>\n<html>\n<head>\n<meta charset="UTF-8">\n<title>QuickCode</title>\n</head>\n<body>\n${code}\n</body>\n</html>`;
       blob = new Blob([full], { type: 'text/html' });
     } else if (ext === 'css') {
       blob = new Blob([code], { type: 'text/css' });
@@ -221,15 +172,15 @@
   });
 
   downloadBtn.addEventListener('click', function() {
-    saveCurrent();
+    safeSet();
     const type = prompt('Download as which type?\nType: html, css, or js', 'html');
     if (!type) return;
     const ext = type.toLowerCase();
     const code = codeArea.value;
-    let blob, filename = currentFile + '.' + ext;
+    let blob, filename = 'code.' + ext;
 
     if (ext === 'html') {
-      const full = `<!DOCTYPE html>\n<html>\n<head>\n<meta charset="UTF-8">\n<title>${currentFile}</title>\n</head>\n<body>\n${code}\n</body>\n</html>`;
+      const full = `<!DOCTYPE html>\n<html>\n<head>\n<meta charset="UTF-8">\n<title>QuickCode</title>\n</head>\n<body>\n${code}\n</body>\n</html>`;
       blob = new Blob([full], { type: 'text/html' });
     } else if (ext === 'css') {
       blob = new Blob([code], { type: 'text/css' });
@@ -251,21 +202,14 @@
   });
 
   resetBtn.addEventListener('click', function() {
-    if (confirm('Reset all files? This cannot be undone.')) {
+    if (confirm('Reset code? This cannot be undone.')) {
       try { localStorage.clear(); } catch(e) {}
-      files = { file1: defaultCode };
-      currentFile = 'file1';
-      fileNameInput.value = currentFile;
       codeArea.value = defaultCode;
       safeSet();
     }
   });
 
-  githubBtn.addEventListener('click', function() {
-    window.open('https://github.com', '_blank', 'noopener,noreferrer');
-  });
-
-  loadFiles();
+  loadCode();
 })();
 </script>
 </body>
