@@ -13,29 +13,43 @@
     * { box-sizing: border-box; margin: 0; padding: 0; }
   body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', Roboto, Arial, sans-serif; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
   header { background: var(--panel); padding: 10px 16px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--border); flex-wrap: wrap; gap: 8px; }
-  .logo { font-size: 18px; font-weight: 600; color: var(--accent); }
-  .actions { display: flex; gap: 8px; flex-wrap: wrap; }
-  .actions button { background: var(--btn); color: var(--text); border: 1px solid var(--border); padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 14px; transition: background 0.2s ease; }
-  .actions button:hover { background: var(--btn-hover); }
+ .logo { font-size: 18px; font-weight: 600; color: var(--accent); }
+ .actions { display: flex; gap: 8px; flex-wrap: wrap; }
+ .actions button { background: var(--btn); color: var(--text); border: 1px solid var(--border); padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 14px; transition: background 0.2s ease; }
+ .actions button:hover { background: var(--btn-hover); }
   #turboBtn { font-weight:bold; }
   #turboBtn.on { background: var(--turbo-on); color:#000; }
   #turboBtn.off { background: var(--turbo-off); color:#fff; }
   #aiToggleBtn { background: var(--accent); color:#000; font-weight:bold; }
   main { flex: 1; position: relative; }
   textarea { width: 100%; height: 100%; background: var(--bg); color: var(--text); border: none; outline: none; resize: none; padding: 14px; font-family: 'Consolas', 'Monaco', monospace; font-size: 14px; line-height: 1.5; }
-  .ai-panel { position: absolute; bottom: 0; right: 0; width: 40%; height: 100%; background: var(--panel); border-left: 1px solid var(--border); display: flex; flex-direction: column; transform: translateX(100%); transition: transform 0.3s ease; z-index: 10; }
-  .ai-panel.open { transform: translateX(0); }
-  .panel-header { padding: 8px 12px; background: var(--panel-2); border-bottom: 1px solid var(--border); font-weight: 600; display:flex; justify-content:space-between; }
-  .panel-header button { background:none; border:none; color:var(--text); font-size:18px; cursor:pointer; }
-  .ai-chat { flex:1; padding:10px; overflow-y:auto; }
-  .ai-input { display:flex; padding:10px; border-top:1px solid var(--border); gap:8px; }
-  .ai-input input { flex:1; padding:8px; background:var(--panel-2); border:1px solid var(--border); color:var(--text); border-radius:4px; }
-  .ai-input button { padding:8px 12px; background:var(--accent); border:none; color:#000; border-radius:4px; cursor:pointer; font-weight: 600; }
-  .ai-msg { background:var(--panel-2); padding:10px; border-radius:6px; margin-bottom:8px; white-space:pre-wrap; font-size:13px; }
-  .ai-msg.error { background:#3d2626; color:#ff6b6b; }
-  .ai-msg.loading { background:#2d3526; color:#ffd700; font-style: italic; }
-  .ai-msg button { float:right; font-size:12px; padding:2px 6px; cursor:pointer; background:var(--accent); color:#000; border:none; border-radius:3px; }
-  @media (max-width: 900px) { .ai-panel { width: 100%; } }
+
+ .side-panel { position: absolute; top: 0; right: 0; width: 320px; height: 100%; background: var(--panel); border-left: 1px solid var(--border); display: flex; flex-direction: column; transform: translateX(100%); transition: transform 0.3s ease; z-index: 20; }
+ .side-panel.open { transform: translateX(0); }
+ .panel-header { padding: 10px 12px; background: var(--panel-2); border-bottom: 1px solid var(--border); font-weight: 600; display:flex; justify-content:space-between; align-items:center; }
+ .panel-header button { background:none; border:none; color:var(--text); font-size:18px; cursor:pointer; }
+ .panel-content { flex:1; padding:10px; overflow-y:auto; font-size:13px; }
+ .help-item { margin-bottom:10px; padding:8px; background:var(--panel-2); border-radius:4px; }
+ .help-item code { color:var(--accent); font-weight:bold; }
+
+ .search-box { display:flex; gap:6px; padding:10px; border-bottom:1px solid var(--border); }
+ .search-box input { flex:1; padding:6px; background:var(--panel-2); border:1px solid var(--border); color:var(--text); border-radius:4px; }
+ .search-box button { padding:6px 10px; background:var(--accent); border:none; color:#000; border-radius:4px; cursor:pointer; font-weight:600; }
+
+ .file-info { padding:8px 10px; background:var(--panel-2); border-bottom:1px solid var(--border); font-size:12px; }
+ .file-info span { color:var(--accent); }
+
+ .ai-panel { position: absolute; bottom: 0; right: 0; width: 40%; height: 100%; background: var(--panel); border-left: 1px solid var(--border); display: flex; flex-direction: column; transform: translateX(100%); transition: transform 0.3s ease; z-index: 10; }
+ .ai-panel.open { transform: translateX(0); }
+ .ai-chat { flex:1; padding:10px; overflow-y:auto; }
+ .ai-input { display:flex; padding:10px; border-top:1px solid var(--border); gap:8px; }
+ .ai-input input { flex:1; padding:8px; background:var(--panel-2); border:1px solid var(--border); color:var(--text); border-radius:4px; }
+ .ai-input button { padding:8px 12px; background:var(--accent); border:none; color:#000; border-radius:4px; cursor:pointer; font-weight: 600; }
+ .ai-msg { background:var(--panel-2); padding:10px; border-radius:6px; margin-bottom:8px; white-space:pre-wrap; font-size:13px; }
+ .ai-msg.error { background:#3d2626; color:#ff6b6b; }
+ .ai-msg.loading { background:#2d3526; color:#ffd700; font-style: italic; }
+ .ai-msg button { float:right; font-size:12px; padding:2px 6px; cursor:pointer; background:var(--accent); color:#000; border:none; border-radius:3px; margin-left:6px; }
+  @media (max-width: 900px) {.ai-panel { width: 100%; }.side-panel { width: 100%; } }
 </style>
 </head>
 <body>
@@ -43,25 +57,52 @@
   <div class="logo">QuickCode v2</div>
   <div class="actions">
     <button id="turboBtn" class="on">Turbo: ON</button>
+    <button id="searchBtn">🔍 Search</button>
+    <button id="helpBtn">❓ Help</button>
+    <button id="fileBtn">📁 File</button>
     <button id="aiToggleBtn">🤖 AI</button>
     <button id="saveBtn">💾 Save</button>
     <button id="runBtn">▶ Run</button>
     <button id="downloadBtn">📥 Download</button>
     <button id="resetBtn">🔄 Reset</button>
-    <button id="helpBtn"> Help</button>
   </div>
 </header>
 
 <main>
   <textarea id="codeArea" spellcheck="false" placeholder="Start coding here..."></textarea>
+  <input type="file" id="fileInput" accept=".html,.css,.js,.txt" style="display:none">
+
+  <div class="side-panel" id="helpPanel">
+    <div class="panel-header">
+      <span>📚 Quick Help</span>
+      <button onclick="toggleHelp()">×</button>
+    </div>
+    <div class="panel-content" id="helpContent"></div>
+  </div>
+
+  <div class="side-panel" id="searchPanel">
+    <div class="panel-header">
+      <span>🔍 Code Search</span>
+      <button onclick="toggleSearch()">×</button>
+    </div>
+    <div class="search-box">
+      <input id="searchInput" placeholder="Kya search karna hai?">
+      <button onclick="doSearch()">Find</button>
+    </div>
+    <div class="panel-content" id="searchResult">Type karke Enter dabao</div>
+  </div>
+
   <div class="ai-panel" id="aiPanel">
     <div class="panel-header">
       <span>⚡ Turbo AI - Llama 3.1</span>
       <button onclick="toggleAI()">×</button>
     </div>
+    <div class="file-info" id="fileInfo" style="display:none">
+      File: <span id="fileName">None</span> <button onclick="clearFile()" style="float:right;background:none;border:none;color:var(--text);cursor:pointer">×</button>
+    </div>
     <div class="ai-chat" id="aiChat"></div>
     <div class="ai-input">
-      <input id="aiMsg" placeholder="Code check karo... Enter dabao">
+      <input id="aiMsg" placeholder="Kuch bhi pucho... Enter dabao">
       <button onclick="sendMsg()">Send</button>
     </div>
   </div>
@@ -69,16 +110,20 @@
 
 <script>
 (function() {
-  const API_KEY = "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"; // STEP 1: Isko change karo
+  const API_KEY = "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";
   let turbo = true;
   let isLoading = false;
+  let uploadedFileContent = "";
+  let uploadedFileName = "";
 
   const codeArea = document.getElementById('codeArea');
   const aiPanel = document.getElementById('aiPanel');
+  const helpPanel = document.getElementById('helpPanel');
+  const searchPanel = document.getElementById('searchPanel');
   const turboBtn = document.getElementById('turboBtn');
   const aiChat = document.getElementById('aiChat');
 
-  const defaultCode = 'Welcome to QuickCode ';
+  const defaultCode = '<!-- Welcome to QuickCode -->\n<h1>Hello World</h1>';
 
   function safeGet() { try { return localStorage.getItem('qc_code') || defaultCode; } catch(e) { return defaultCode; } }
   function safeSet() { try { localStorage.setItem('qc_code', codeArea.value); } catch(e) {} }
@@ -90,74 +135,156 @@
   document.getElementById('downloadBtn').onclick = () => { const a=document.createElement('a'); a.href=URL.createObjectURL(new Blob([codeArea.value],{type:'text/html'})); a.download='code.html'; a.click(); };
   document.getElementById('resetBtn').onclick = () => { if(confirm('Reset?')){localStorage.clear(); codeArea.value=defaultCode; safeSet();} };
 
-  window.toggleAI = () => aiPanel.classList.toggle('open');
+  window.toggleAI = () => { aiPanel.classList.toggle('open'); helpPanel.classList.remove('open'); searchPanel.classList.remove('open'); }
+  window.toggleHelp = () => { helpPanel.classList.toggle('open'); aiPanel.classList.remove('open'); searchPanel.classList.remove('open'); loadHelpData(); }
+  window.toggleSearch = () => { searchPanel.classList.toggle('open'); aiPanel.classList.remove('open'); helpPanel.classList.remove('open'); }
   document.getElementById('aiToggleBtn').onclick = toggleAI;
+  document.getElementById('helpBtn').onclick = toggleHelp;
+  document.getElementById('searchBtn').onclick = toggleSearch;
 
   turboBtn.onclick = () => {
-    turbo = !turbo;
-    turboBtn.innerText = "Turbo: " + (turbo ? "ON" : "OFF");
-    turboBtn.className = turbo ? "on" : "off";
+    turbo =!turbo;
+    turboBtn.innerText = "Turbo: " + (turbo? "ON" : "OFF");
+    turboBtn.className = turbo? "on" : "off";
   };
 
-  document.getElementById('aiMsg').addEventListener('keypress', e => { if(e.key==='Enter' && !isLoading) sendMsg(); });
+  // FILE LOGIC
+  document.getElementById('fileBtn').onclick = () => {
+    document.getElementById('fileInput').click();
+  }
+  document.getElementById('fileInput').onchange = (e) => {
+    const file = e.target.files[0];
+    if(!file) return;
+    uploadedFileName = file.name;
+    const reader = new FileReader();
+    reader.onload = () => {
+      uploadedFileContent = reader.result;
+      document.getElementById('fileInfo').style.display = 'block';
+      document.getElementById('fileName').innerText = uploadedFileName;
+      addAIMsg(`✅ File load ho gayi: ${uploadedFileName}`);
+    }
+    reader.readAsText(file);
+  }
+  window.clearFile = () => {
+    uploadedFileContent = "";
+    uploadedFileName = "";
+    document.getElementById('fileInfo').style.display = 'none';
+    addAIMsg("📁 File hata di gayi");
+  }
 
+  // HELP DATA
+  function loadHelpData() {
+    const helpData = [
+      {tag: 'div', desc: 'Page ko sections me divide karne ke liye use hota hai'},
+      {tag: 'p', desc: 'Paragraph likhne ke liye'},
+      {tag: 'a href=""', desc: 'Link banane ke liye use hota hai'},
+      {tag: 'img src=""', desc: 'Image show karne ke liye'},
+      {tag: 'button', desc: 'Clickable button banane ke liye'},
+      {tag: 'input', desc: 'User se data lene ke liye'},
+      {tag: 'color: red', desc: 'Text ka color change karne ke liye CSS property'},
+      {tag: 'display: flex', desc: 'Items ko row ya column me arrange karne ke liye'},
+      {tag: 'margin:', desc: 'Element ke bahar space dene ke liye'},
+      {tag: 'padding:', desc: 'Element ke andar space dene ke liye'},
+      {tag: 'document.getElementById()', desc: 'JS me element ko select karne ke liye'},
+      {tag: 'addEventListener()', desc: 'Click jaise events handle karne ke liye'},
+      {tag: 'function', desc: 'Code ka reusable block banane ke liye'},
+      {tag: 'let / const', desc: 'Variable declare karne ke liye'},
+      {tag: 'if else', desc: 'Condition check karne ke liye'},
+      {tag: 'for loop', desc: 'Kaam ko baar baar repeat karne ke liye'},
+      {tag: 'fetch()', desc: 'API se data lane ke liye'},
+      {tag: 'localStorage', desc: 'Browser me data save karne ke liye'}
+    ];
+    let html = '';
+    helpData.forEach(item => {
+      html += `<div class="help-item"><code>${item.tag}</code><br>${item.desc}</div>`;
+    });
+    document.getElementById('helpContent').innerHTML = html;
+  }
+
+  // SEARCH FUNCTION
+  function doSearch() {
+    let term = document.getElementById('searchInput').value.trim();
+    if(!term) return;
+    let code = codeArea.value;
+    let index = code.toLowerCase().indexOf(term.toLowerCase());
+    if(index!== -1) {
+      let lines = code.substring(0, index).split('\n').length;
+      codeArea.focus();
+      codeArea.setSelectionRange(index, index + term.length);
+      let lineHeight = 21;
+      codeArea.scrollTop = (lines - 3) * lineHeight;
+      document.getElementById('searchResult').innerText = `Mila! Line ${lines} pe hai`;
+    } else {
+      document.getElementById('searchResult').innerText = 'Nahi mila bhai';
+    }
+  }
+  document.getElementById('searchInput').addEventListener('keypress', e => { if(e.key==='Enter') doSearch(); });
+  document.getElementById('aiMsg').addEventListener('keypress', e => { if(e.key==='Enter' &&!isLoading) sendMsg(); });
+
+  // SMART AI - SIRF TABHI CODE DEKHE JAB USER BOLE
   window.sendMsg = async () => {
     let userMsg = document.getElementById("aiMsg").value.trim();
     if(!userMsg || isLoading) return;
     if(API_KEY === "yaha_nayi_key_daalo"){
-        alert("Bhai pehle API Key daal de line 3 me");
+        alert("Bhai pehle API Key daal de");
         return;
     }
-    
+
     isLoading = true;
     addAIMsg("Tum: " + userMsg);
     document.getElementById("aiMsg").value = "";
     addAIMsg("⏳ Processing...", null, "loading");
 
-    let model = turbo ? "llama-3.1-8b-instant" : "llama-3.1-70b-versatile"; // NAYA MODEL
-    let max_tokens = turbo ? 200 : 600;
-    let system_prompt = turbo
-     ? `Tum code reviewer ho. Rule: Sirf 4 line. 1.Accha 2.Wajah 3.Sudhaar 4.Fixed Code in \`\`\``
-      : `Tum senior developer ho. Detail me samjhao with code example.`;
+    let model = turbo? "llama-3.1-8b-instant" : "llama-3.1-70b-versatile";
+    let max_tokens = turbo? 500 : 900;
 
-    let full_prompt = `Current Code:\n${codeArea.value}\n\nUser Question: ${userMsg}`;
+    let hasFile = uploadedFileContent && uploadedFileContent.length > 0;
+    let userAskedForCode = /code|check|error|fix|sudhar|theek|galti|editor|debug/i.test(userMsg);
+
+    let system_prompt;
+    let full_prompt;
+
+    if(hasFile && userAskedForCode){
+      system_prompt = `Tum ek code assistant ho. User ne file upload ki hai aur code ke baare me puch raha hai.
+      Sirf tabhi uploaded file aur editor code dono analyze karo. Error, sudhar aur fixed code do. Hindi-English mix me baat karo.`;
+      full_prompt = `Uploaded File: ${uploadedFileName}\nFile Content:\n${uploadedFileContent}\n\nCurrent Code in Editor:\n${codeArea.value}\n\nUser Question: ${userMsg}`;
+    } else if(!hasFile && userAskedForCode){
+      system_prompt = `Tum ek code assistant ho. User ne code editor ke code ke baare me pucha hai.
+      Sirf editor ke code ko analyze karo aur help karo. Hindi-English mix me baat karo.`;
+      full_prompt = `Current Code in Editor:\n${codeArea.value}\n\nUser Question: ${userMsg}`;
+    } else {
+      system_prompt = `Tum ek friendly coding teacher ho. User ne abhi code check karne ko nahi bola hai.
+      Isliye code editor ka code ya uploaded file ko bilkul mat dekho.
+      Sirf user ke sawaal ka general jawab do, example aur explanation ke saath. Hindi-English mix me baat karo.`;
+      full_prompt = `User Question: ${userMsg}`;
+    }
 
     try {
       let apiUrl = "https://api.groq.com/openai/v1/chat/completions";
-      let proxyUrl = "https://corsproxy.io/?" + encodeURIComponent(apiUrl); // YE FAST HAI
-      
+      let proxyUrl = "https://corsproxy.io/?" + encodeURIComponent(apiUrl);
       let res = await fetch(proxyUrl, {
         method: "POST",
-        headers: { 
-          "Authorization": "Bearer " + API_KEY, 
+        headers: {
+          "Authorization": "Bearer " + API_KEY,
           "Content-Type": "application/json"
         },
         body: JSON.stringify({
-          model: model, 
+          model: model,
           max_tokens: max_tokens,
           temperature: 0.7,
           messages: [
-            {role: "system", content: system_prompt}, 
+            {role: "system", content: system_prompt},
             {role: "user", content: full_prompt}
           ]
         })
       });
-
       removeLoadingMsg();
-
-      if(!res.ok) {
-        let errorData = await res.json().catch(()=>({}));
-        addAIMsg(`❌ Error ${res.status}: ${errorData.error?.message || "API Error"}`, null, "error");
-        isLoading = false;
-        return;
-      }
-
       let data = await res.json();
       let reply = data.choices[0].message.content;
       addAIMsg("AI: " + reply, reply);
-    } catch(e) { 
+    } catch(e) {
       removeLoadingMsg();
-      addAIMsg(`❌ Connection failed. Internet ya Proxy down hai`, null, "error");
+      addAIMsg(`❌ Connection failed`, null, "error");
     } finally {
       isLoading = false;
     }
@@ -171,33 +298,31 @@
   }
 
   function addAIMsg(text, codeToCopy=null, msgType="normal") {
-    let div = document.createElement('div'); 
+    let div = document.createElement('div');
     div.className = 'ai-msg ' + msgType;
-    
     if(codeToCopy && codeToCopy.includes('```')){
       try {
         let codeBlocks = codeToCopy.match(/```([\s\S]*?)```/g);
-        let code = codeBlocks ? codeBlocks[0].replace(/```/g, '') : codeToCopy;
+        let code = codeBlocks? codeBlocks[0].replace(/```/g, '') : codeToCopy;
         div.innerHTML = text + `<br><button onclick="copyCode(\`${code.replace(/`/g,'\\`')}\`)">📋 Copy</button>`;
       } catch(e) {
         div.innerText = text;
       }
-    } else { 
-      div.innerText = text; 
+    } else {
+      div.innerText = text;
     }
-    
-    aiChat.appendChild(div); 
+    aiChat.appendChild(div);
     aiChat.scrollTop = aiChat.scrollHeight;
   }
-  
-  window.copyCode = (code) => { 
-    codeArea.value = code; 
-    safeSet(); 
-    alert('✅ Code paste ho gaya!'); 
+
+  window.copyCode = (code) => {
+    codeArea.value = code;
+    safeSet();
+    alert('✅ Code paste ho gaya!');
   }
 
   loadCode();
 })();
 </script>
 </body>
-</html>
+      </html>
