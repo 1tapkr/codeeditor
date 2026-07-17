@@ -123,7 +123,7 @@
   const turboBtn = document.getElementById('turboBtn');
   const aiChat = document.getElementById('aiChat');
 
-  const defaultCode = '<!-- Welcome to QuickCode -->\n<h1>Hello World</h1>';
+  const defaultCode = '<!-- Welcome to QuickCode -->\n>';
 
   function safeGet() { try { return localStorage.getItem('qc_code') || defaultCode; } catch(e) { return defaultCode; } }
   function safeSet() { try { localStorage.setItem('qc_code', codeArea.value); } catch(e) {} }
